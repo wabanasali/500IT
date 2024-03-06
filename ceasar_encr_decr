@@ -1,1 +1,48 @@
+# Dictionary mapping each letter of the English alphabet to its corresponding index
+english_dic = {'a': 0,'b': 1,'c': 2,'d': 3,'e': 4,'f': 5,'g': 6,'h': 7,'i': 8,'j': 9,'k': 10,'l': 11,'m': 12,'n': 13,'o': 14,'p': 15,'q': 16,'r': 17,'s': 18,'t': 19,'u': 20,'v': 21,'w': 22,'x': 23,'y': 24,'z': 25}
+# List containing the English alphabet
+english_list = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+# Empty lists to store cipher during encryption
+cipher = []
+# Empty lists to store  plain text during decryption
+plain = []
+# Function to perform Caesar encryption
+def ceasar_encrytion(pt):
+    pass
+# Function to perform Caesar decryption
+def ceasar_decryption(ct):
+    pass
+# Function to convert a list of characters to a string
+def list_to_string(char_list):
+    return ''.join(char_list)
+# Functions to add color to console output for better readability
+def green_text(text):
+    return f'\033[92m{text}\033[0m'
 
+def orange_text(text):
+    return f'\033[93m{text}\033[0m'
+# Flag to control the while loop
+dont_stop = True
+while dont_stop:
+    # User input for program control
+    value = int(input('Enter 0 to Exit\n Enter 1 to Perform Encryption\n Enter 2 to Perform Decryption\n'))
+    if value == 0:
+        #Choice to exit console program
+        dont_stop = False
+    elif value == 1:
+        # Encryption, call to encryption function and display of cipher text
+        print('You selected encryption')
+        plaintext = input('Enter plaintext: ')
+        key = int(input('Enter key: '))
+        ceasar_encrytion(plaintext)
+        print(f'{orange_text(plaintext)} is encrypted to {green_text(list_to_string(cipher))}')
+    elif value == 2:
+        #Decryption, call to decryption function and display of plaintext
+        print('You selected decryption')
+        ciphertext = input('Enter ciphertext: ')
+        key = int(input('Enter key: '))
+        ceasar_decryption(ciphertext)
+        print(f'{orange_text(ciphertext)} is decrypted to {green_text(list_to_string(plain))}')
+    else:
+        #Unexpected choice selected
+        print('Choose a value between 0 and 2')
