@@ -1,0 +1,17 @@
+def inverse_mod(number, modulo):
+    inv = -1
+    for i in range(modulo):
+        mod = (number*i)%modulo
+        if mod == 1:
+            inv = i
+            break
+    return inv
+n = input('Enter number: ')
+m = input('Enter modulo base: ')
+num = int(n)
+mod = int(m)
+inv = inverse_mod(num,mod)
+if inv != -1:
+    print(f'Inverse of {num} modulo {mod} is {inv}')
+else:
+    print('No inverse exists')
