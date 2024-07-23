@@ -1,0 +1,115 @@
+class TreeNode:
+    def __init__(self, key):
+        self.left = None
+        self.right = None
+        self.val = key
+
+class BinaryTree:
+    def __init__(self):
+        self.root = None
+	#  add_node : Adds a new node with the specified key to the tree.
+    def add_node(self, key):
+        if self.root is None:
+            self.root = TreeNode(key)
+        else:
+            self._add(self.root, key)
+
+	# Helper method to recursively find the correct position for the new node.
+    def _add(self, node, key):
+        if key < node.val:
+            if node.left is None:
+                node.left = TreeNode(key)
+            else:
+                self._add(node.left, key)
+        else:
+            if node.right is None:
+                node.right = TreeNode(key)
+            else:
+                self._add(node.right, key)
+
+
+
+	# Removes a node with the specified key from the tree.
+    def remove_node(self, key):
+        self.root = self._remove(self.root, key)
+
+	# Helper method to recursively find and remove the node.
+    def _remove(self, node, key):
+        if node is None:
+            return node
+        if key < node.val:
+            node.left = self._remove(node.left, key)
+        elif key > node.val:
+            node.right = self._remove(node.right, key)
+        else:
+            if node.left is None:
+                return node.right
+            elif node.right is None:
+                return node.left
+            temp_val = self._min_value_node(node.right)
+            node.val = temp_val.val
+            node.right = self._remove(node.right, temp_val.val)
+        return node
+
+
+
+    #Helper method to find the node with the minimum value in a subtree.    
+    def _min_value_node(self, node):
+            current = node
+            while current.left is not None:
+                current = current.left
+            return current
+
+
+    def inorder_traversal(self):
+        return self._inorder(self.root, [])
+
+    def _inorder(self, node, traversal):
+        if node:
+            traversal = self._inorder(node.left, traversal)
+            traversal.append(node.val)
+            traversal = self._inorder(node.right, traversal)
+        return traversal
+
+    def preorder_traversal(self):
+        return self._preorder(self.root, [])
+
+    def _preorder(self, node, traversal):
+        if node:
+            traversal.append(node.val)
+            traversal = self._preorder(node.left, traversal)
+            traversal = self._preorder(node.right, traversal)
+        return traversal
+
+    def postorder_traversal(self):
+        return self._postorder(self.root, [])
+
+    def _postorder(self, node, traversal):
+        if node:
+            traversal = self._postorder(node.left, traversal)
+            traversal = self._postorder(node.right, traversal)
+            traversal.append(node.val)
+        return traversal
+
+
+# Example usage
+tree = BinaryTree()
+tree.add_node(50)
+tree.add_node(30)
+tree.add_node(20)
+tree.add_node(40)
+tree.add_node(70)
+tree.add_node(60)
+tree.add_node(80)
+
+print("Inorder traversal:", tree.inorder_traversal())
+print("Preorder traversal:", tree.preorder_traversal())
+print("Postorder traversal:", tree.postorder_traversal())
+
+tree.remove_node(20)
+print("Inorder traversal after removing 20:", tree.inorder_traversal())
+tree.remove_node(30)
+print("Inorder traversal after removing 30:", tree.inorder_traversal())
+tree.remove_node(50)
+print("Inorder traversal after removing 50:", tree.inorder_traversal())
+
