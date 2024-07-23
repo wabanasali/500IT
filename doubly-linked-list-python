@@ -1,0 +1,84 @@
+class Node:
+    def __init__(self, data):
+        self.data =  data
+        self.next = None
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    
+    def insertNode(self, data):
+        new_node = Node(data)
+        if self.head == None:
+            self.head = new_node
+        else:
+            last_node = self.head
+            while last_node.next:
+                last_node = last_node.next
+            last_node.next = new_node
+    
+    def traverseList(self):
+        currentNode = self.head
+        while currentNode:
+            print(currentNode.data, end='->')
+            currentNode = currentNode.next
+        print('None')
+        
+
+class DoublyNode(Node):
+    def __init__(self, data):
+        super().__init__(data)
+        self.prev = None
+
+class DoublyLinkedList(LinkedList):
+    def insertNode(self, data):
+        new_node = DoublyNode(data)
+        if self.head is None:
+            self.head = new_node
+        else:
+            last_node = self.head
+            while last_node.next:
+                last_node = last_node.next
+            last_node.next = new_node
+            new_node.prev = last_node
+
+
+
+    def traverseList(self, direction='forward'):
+        if direction not in ['forward', 'backward']:
+            raise ValueError("Direction must be 'forward' or 'backward'")
+        
+        if direction == 'forward':
+            currentNode = self.head
+            while currentNode:
+                print(currentNode.data, end='->')
+                currentNode = currentNode.next
+            print('None')
+        else:  # direction == 'backward'
+            currentNode = self.head
+            if not currentNode:
+                print("None")
+                return
+            
+            # Move to the end of the list
+            while currentNode.next:
+                currentNode = currentNode.next
+            
+            # Traverse backward
+            while currentNode:
+                print(currentNode.data, end='->')
+                currentNode = currentNode.prev
+            print('None')
+
+
+# Testing the DoublyLinkedList class
+doubly_linked_list = DoublyLinkedList()
+doubly_linked_list.insertNode(3)
+doubly_linked_list.insertNode(1)
+doubly_linked_list.insertNode(0)
+
+print("Forward Traversal:")
+doubly_linked_list.traverseList('forward')  
+
+print("Backward Traversal:")
+doubly_linked_list.traverseList('backward')  
