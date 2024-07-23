@@ -1,0 +1,106 @@
+class Node:
+    def __init__(self, data):
+        self.data =  data
+        self.next = None
+
+class LinkedList:
+    def __init__(self):
+        self.head = None
+    
+    def insertNode(self, data):
+        new_node = Node(data)
+        if self.head == None:
+            self.head = new_node
+        else:
+            last_node = self.head
+            while last_node.next:
+                last_node = last_node.next
+            last_node.next = new_node
+    
+
+
+
+
+
+
+
+
+
+
+
+
+    def insertNodeAtPos(self, data, position):
+        new_node = Node(data)
+        if position == 0:
+            new_node.next = self.head
+            self.head = new_node
+        else:
+            currentNode = self.head
+            currentPosition = 0
+            while currentNode is not None and currentPosition < position-1:
+                currentNode = currentNode.next
+                currentPosition += 1
+            if currentNode is None:
+                print(f'Position {position} is out of bounds. Node cannot be inserted')
+            else:
+                new_node.next = currentNode.next
+                currentNode.next = new_node
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def deleteNodeAtPos(self, position):
+        if self.head is None:
+            print('List is empty. Not possible to delete')
+            return
+        temp = self.head
+        
+        if position == 0:
+            self.head = temp.next
+            temp = None
+            return
+        for i in range(position - 1):
+            temp = temp.next
+            if temp is None:
+                break
+        if temp is None or temp.next is None:
+            print(f'Position {position} is out of bounds')
+            return
+        next = temp.next.next
+        temp.next = None
+        temp.next = None
+        temp.next = next
+    
+    def traverseList(self):
+        currentNode = self.head
+        while currentNode:
+            print(currentNode.data, end='=>')
+            currentNode = currentNode.next
+        print('List-Tail')
+    
+
+    
+test = LinkedList()
+test.insertNode(3)
+test.insertNode(1)
+test.insertNode(7)
+test.traverseList()
+print('Before inserting node at position 1')
+test.traverseList()
+test.insertNodeAtPos(8,1)
+print('After inserting node at position 1')
+test.traverseList()
+print('after deleting node at position 2')
+test.deleteNodeAtPos(2)
+test.traverseList()
