@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Escape the Cipher Cell</title>
+  <style>
+    body {
+      background-color: #1e1e2f;
+      color: #f0f0f0;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 2rem;
+      text-align: center;
+      user-select: none;
+    }
+    .hidden {
+      display: none;
+    }
+    .room {
+      margin-top: 2rem;
+    }
+    input[type="text"] {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin: 0.5rem;
+      width: 80%;
+      background-color: #2b2b44;
+      border: 1px solid #444;
+      color: #eee;
+      text-align: center;
+    }
+    input[type="range"] {
+      width: 300px;
+    }
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      margin-top: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+      background-color: #4a90e2;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    button:disabled {
+      background-color: #888;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #357abd;
+    }
+    .definition-box {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+    .definition, .term {
+      border: 1px dashed #f0f0f0;
+      padding: 1rem;
+      width: 220px;
+      min-height: 60px;
+      user-select: none;
+      cursor: grab;
+      border-radius: 5px;
+      background-color: #2a2a4a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+    .term.dragging {
+      opacity: 0.5;
+      cursor: grabbing;
+    }
+    .definition.drop-target {
+      border-color: #4a90e2;
+      background-color: #3a3a6a;
+    }
+    .message {
+      margin-top: 1rem;
+      font-style: italic;
+      min-height: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Escape the Cipher Cell</h1>
+
+  <div id="intro">
+    <p>You wake up in a digital prison. A voice echoes:<br>"Solve the puzzles to escape... or remain our test subject forever."</p>
+    <button onclick="enterRoom(1)">Enter Room 1</button>
+  </div>
+
+  <div id="room1" class="room hidden">
+    <h2>Room 1: Cipher Chamber</h2>
+    <p>Message on the wall: <strong>Wklv phvvdjh lv your first test</strong></p>
+    <p>Use the Caesar cipher decoder to decrypt it by adjusting the shift:</p>
+    <label for="shift1">Shift: <span id="shiftVal1">5</span></label><br>
+    <input type="range" min="0" max="25" value="5" id="shift1" oninput="updateDecryption1()">
+    <br>
+    <input type="text" id="output1" readonly>
+    <br>
+    <button id="submit1" onclick="checkAnswer1()" disabled>Submit</button>
+    <div id="message1" class="message"></div>
+  </div>
+
+  <div id="room2" class="room hidden">
+    <h2>Room 2: Scrambler's Den</h2>
+    <p>The scrambled message reads: <strong>KDDKMU XYBDR XYG</strong></p>
+    <p>Guess the shift and decrypt:</p>
+    <label for="shift2">Shift: <span id="shiftVal2">0</span></label><br>
+    <input type="range" min="0" max="25" value="0" id="shift2" oninput="updateDecryption2()">
+    <br>
+    <input type="text" id="output2" readonly>
+    <br>
+    <button id="submit2" onclick="checkAnswer2()" disabled>Submit</button>
+    <div id="message2" class="message"></div>
+  </div>
+
+  <div id="room3" class="room hidden">
+    <h2>Room 3: Archive of Secrets</h2>
+    <p>Drag the terms and drop them onto the matching definitions:</p>
+    <div class="definition-box" id="definitions">
+      <div class="definition" data-term="Cryptography">The art of writing codes to protect information</div>
+      <div class="definition" data-term="Cryptanalysis">The science of breaking codes</div>
+      <div class="definition" data-term="Cryptology">The study of both code-making and code-breaking</div>
+    </div>
+    <div class="definition-box" id="terms">
+      <div class="term" draggable="true" id="term1">Cryptanalysis</div>
+      <div class="term" draggable="true" id="term2">Cryptology</div>
+      <div class="term" draggable="true" id="term3">Cryptography</div>
+    </div>
+    <button id="finishBtn" onclick="checkMatching()" disabled>Finish</button>
+    <div id="message3" class="message"></div>
+  </div>
+
+  <div id="ending" class="room hidden">
+    <h2>You Escaped!</h2>
+    <p>The entire prison was a simulation by the Institute of Cryptology.</p>
+    <p>Welcome, Agent. You are now one of us.</p>
+  </div>
+
+  <script>
+    function enterRoom(num) {
+      document.getElementById("intro").classList.add("hidden");
+      // Hide all rooms first
+      document.querySelectorAll('.room').forEach(room => room.classList.add('hidden'));
+      document.getElementById("room" + num).classList.remove("hidden");
+      if (num === 1) updateDecryption1();
+      if (num === 2) updateDecryption2();
+    }
+
+    // Room 1 Logic - left untouched as per your request
+    function updateDecryption1() {
+      let shift = parseInt(document.getElementById("shift1").value);
+      document.getElementById("shiftVal1").innerText = shift;
+      let decrypted = caesarDecrypt("Wklv phvvdjh lv", shift) + " your first test";
+      document.getElementById("output1").value = decrypted;
+      const submitBtn = document.getElementById("submit1");
+      const message = document.getElementById("message1");
+      if (decrypted.toLowerCase().includes("this message is your first test")) {
+        message.textContent = "Looks correct! You can submit.";
+        submitBtn.disabled = false;
+      } else {
+        message.textContent = "";
+        submitBtn.disabled = true;
+      }
+    }
+
+    function checkAnswer1() {
+      enterRoom(2);
+    }
+
+    // Room 2 Logic — FIXED for forward shift and syntax
+    function updateDecryption2() {
+      let shift = parseInt(document.getElementById("shift2").value);
+      document.getElementById("shiftVal2").innerText = shift;
+      let decrypted = caesarDecrypt("KDDKMU XYBDR XYG", shift, 1); // direction = +1 for forward shift
+      document.getElementById("output2").value = decrypted;
+      const submitBtn = document.getElementById("submit2");
+      const message = document.getElementById("message2");
+      if (decrypted.toLowerCase() === "attack north now") {
+        message.textContent = "Decryption seems correct! You can submit.";
+        submitBtn.disabled = false;
+      } else {
+        message.textContent = "";
+        submitBtn.disabled = true;
+      }
+    }
+
+    function checkAnswer2() {
+      enterRoom(3);
+      setupDragAndDrop();
+    }
+
+    // Room 3 Matching Logic
+    let draggedTerm = null;
+    const assignments = {};
+
+    function setupDragAndDrop() {
+      const terms = document.querySelectorAll(".term");
+      const definitions = document.querySelectorAll(".definition");
+      const finishBtn = document.getElementById("finishBtn");
+      const message = document.getElementById("message3");
+      message.textContent = "";
+      finishBtn.disabled = true;
+
+      terms.forEach(term => {
+        term.classList.remove("dragging");
+        term.style.opacity = '1';
+        term.setAttribute("draggable", "true");
+      });
+
+      definitions.forEach(def => {
+        def.classList.remove("drop-target");
+        def.innerHTML = def.getAttribute("data-term") ? def.innerHTML : def.innerHTML;
+      });
+
+      // Clear assignments object
+      for (let key in assignments) delete assignments[key];
+
+      // Remove old drop listeners if any before adding new ones
+      definitions.forEach(def => {
+        def.ondragover = (e) => e.preventDefault();
+        def.ondrop = onDrop;
+      });
+
+      terms.forEach(term => {
+        term.ondragstart = onDragStart;
+        term.ondragend = onDragEnd;
+      });
+    }
+
+    function onDragStart(e) {
+      draggedTerm = e.target;
+      e.target.classList.add("dragging");
+    }
+
+    function onDragEnd(e) {
+      e.target.classList.remove("dragging");
+    }
+
+    function onDrop(e) {
+      e.preventDefault();
+      const def = e.target;
+      if (draggedTerm) {
+        // Remove any term already assigned to this definition
+        for (const [defId, termId] of Object.entries(assignments)) {
+          if (def === document.querySelector(`[data-term="${termId}"]`)) {
+            delete assignments[defId];
+          }
+        }
+        // Assign dragged term to definition
+        assignments[def.getAttribute("data-term")] = draggedTerm.textContent;
+        // Update the definition box text to show assigned term
+        def.textContent = draggedTerm.textContent;
+        draggedTerm.style.opacity = '0.5';
+        draggedTerm.setAttribute("draggable", "false");
+
+        checkAllAssigned();
+      }
+    }
+
+    function checkAllAssigned() {
+      const finishBtn = document.getElementById("finishBtn");
+      const terms = document.querySelectorAll(".term[draggable='true']");
+      // Enable finish only if all terms are assigned (all draggable false)
+      if ([...document.querySelectorAll(".term")].every(t => t.getAttribute("draggable") === "false")) {
+        finishBtn.disabled = false;
+      } else {
+        finishBtn.disabled = true;
+      }
+    }
+
+    function checkMatching() {
+      const message = document.getElementById("message3");
+      const correctMatches = {
+        Cryptography: "Cryptography",
+        Cryptanalysis: "Cryptanalysis",
+        Cryptology: "Cryptology"
+      };
+      let allCorrect = true;
+      for (const def in correctMatches) {
+        const assigned = assignments[def];
+        if (assigned !== correctMatches[def]) {
+          allCorrect = false;
+          break;
+        }
+      }
+      if (allCorrect) {
+        message.textContent = "Correct! You've escaped the prison.";
+        document.getElementById("finishBtn").disabled = true;
+        document.getElementById("room3").classList.add("hidden");
+        document.getElementById("ending").classList.remove("hidden");
+      } else {
+        message.textContent = "Some matches are incorrect. Try again.";
+      }
+    }
+
+    // General Caesar Cipher Decrypt function with direction param
+    // direction = -1 (default) shifts backward, +1 shifts forward
+    function caesarDecrypt(text, shift, direction = -1) {
+      return text.replace(/[A-Za-z]/g, function(c) {
+        let base = c <= 'Z' ? 65 : 97;
+        return String.fromCharCode(
+          (c.charCodeAt(0) - base + direction * shift + 26) % 26 + base
+        );
+      });
+    }
+  </script>
+</body>
+</html>
