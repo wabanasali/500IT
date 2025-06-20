@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>RC4 Interactive Learner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
+    header {
+      background: #0074d9;
+      color: white;
+      padding: 15px 20px;
+    }
+    .progress-container {
+      background: #eee;
+      height: 20px;
+      width: 100%;
+    }
+    .progress-bar {
+      height: 100%;
+      background: #2ecc71;
+      width: 0%;
+      transition: width 0.4s ease-in-out;
+    }
+    main {
+      padding: 20px;
+    }
+    .step {
+      display: none;
+    }
+    .step.active {
+      display: block;
+    }
+    .draggables {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .draggable {
+      padding: 8px 12px;
+      background: #dfefff;
+      border: 1px solid #0074d9;
+      border-radius: 6px;
+      cursor: grab;
+      user-select: none;
+    }
+    .drop-zone {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .drop-slot {
+      width: 60px;
+      height: 35px;
+      border: 2px dashed #ccc;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 35px;
+      background: #fff;
+      font-weight: bold;
+    }
+    .drop-slot.filled {
+      border-color: #0074d9;
+      background: #e0f7ff;
+    }
+    textarea {
+      width: 100%;
+      height: 250px;
+      font-family: monospace;
+      padding: 10px;
+      margin-top: 15px;
+    }
+    .success {
+      color: green;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🔐 RC4 Interactive Walkthrough</h1>
+  </header>
+
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <main>
+    <!-- Step 1: Drag and drop -->
+    <section class="step active" id="step1">
+      <h2>Step 1: Define the <code>ksa()</code> Function</h2>
+      <p>Drag and drop the tokens to complete the function:</p>
+      <pre><code>_____ _____ _____ _____ _____ _____ _____ _____</code></pre>
+
+      <div class="draggables" id="draggables"></div>
+
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-slot" data-position="0"></div>
+        <div class="drop-slot" data-position="1"></div>
+        <div class="drop-slot" data-position="2"></div>
+        <div class="drop-slot" data-position="3"></div>
+        <div class="drop-slot" data-position="4"></div>
+        <div class="drop-slot" data-position="5"></div>
+        <div class="drop-slot" data-position="6"></div>
+        <div class="drop-slot" data-position="7"></div>
+      </div>
+
+      <div class="success" id="successMsg1" style="display:none;">✅ Correct! You may continue.</div>
+      <button id="nextBtn1" disabled onclick="nextStep()">Next Step: KSA Logic</button>
+    </section>
+
+    <!-- Step 2: KSA Logic Fill-in -->
+    <section class="step" id="step2">
+      <h2>Step 2: Complete the KSA Logic</h2>
+      <p>Fill in the blanks in the function implementation:</p>
+      <textarea id="ksaCode">
+# Fill in the blanks marked with ___
+def ksa(key, S):
+    T = key * (len(S) // len(key))
+    j = 0
+    for i in range(len(S)):
+        j = (j + S[i] + T[i]) % len(S)
+        S[i], S[j] = S[j], ___
+    return ___
+      </textarea>
+      <button onclick="validateStep2()">Submit Code</button>
+      <div class="success" id="successMsg2" style="display:none;">✅ Great! KSA logic complete.</div>
+      <button id="nextBtn2" style="display:none;" onclick="nextStep()">Next Step: PRGA</button>
+    </section>
+
+    <!-- Step 3: PRGA Fill-in -->
+    <section class="step" id="step3">
+      <h2>Step 3: Complete the PRGA Logic</h2>
+      <p>Fill in the blanks marked with ___ in the function implementation:</p>
+      <textarea id="prgaCode">
+def prga(S):
+    i = 0
+    j = 0
+    keystream = []
+    for _ in range(4):  # generate 4 bytes
+        i = (i + 1) % len(S)
+        j = (j + S[i]) % len(S)
+        S[i], S[j] = S[j], ___
+        t = (S[i] + S[j]) % len(S)
+        keystream.append(S[t])
+    return keystream
+      </textarea>
+      <button onclick="validateStep3()">Submit Code</button>
+      <div class="success" id="successMsg3" style="display:none;">✅ PRGA logic complete.</div>
+      <button id="nextBtn3" style="display:none;" onclick="nextStep()">Next Step: Encryption</button>
+    </section>
+
+    <!-- Step 4: Encryption Fill-in -->
+    <section class="step" id="step4">
+      <h2>Step 4: Complete the Encryption Logic</h2>
+      <p>Fill in the blanks marked with ___:</p>
+      <textarea id="encryptionCode">
+def encrypt(plaintext, keystream):
+    ciphertext = []
+    for p, k in zip(plaintext, keystream):
+        ciphertext.append(p ^ ___)
+    return ciphertext
+      </textarea>
+      <button onclick="validateStep4()">Submit Code</button>
+      <div class="success" id="successMsg4" style="display:none;">✅ Encryption logic complete.</div>
+      <button id="nextBtn4" style="display:none;" onclick="nextStep()">Next Step: Decryption</button>
+    </section>
+
+    <!-- Step 5: Decryption Fill-in -->
+    <section class="step" id="step5">
+      <h2>Step 5: Complete the Decryption Logic</h2>
+      <p>Fill in the blanks marked with ___:</p>
+      <textarea id="decryptionCode">
+def decrypt(ciphertext, keystream):
+    plaintext = []
+    for c, k in zip(ciphertext, keystream):
+        plaintext.append(c ^ ___)
+    return plaintext
+      </textarea>
+      <button onclick="validateStep5()">Submit Code</button>
+      <div class="success" id="successMsg5" style="display:none;">✅ Decryption logic complete.</div>
+
+      <button id="finishBtn" style="display:none;" onclick="finishExercise()">Finish & Download Code</button>
+    </section>
+  </main>
+
+  <script>
+    const correctSequence = ["def", "ksa", "(", "key", ",", "S", ")", ":"];
+    const shuffledSequence = [...correctSequence].sort(() => Math.random() - 0.5);
+    const draggablesContainer = document.getElementById("draggables");
+    shuffledSequence.forEach(token => {
+      const div = document.createElement("div");
+      div.classList.add("draggable");
+      div.setAttribute("draggable", "true");
+      div.innerText = token;
+      draggablesContainer.appendChild(div);
+    });
+
+    let dragged = null;
+    let currentStep = 1;
+
+    function updateProgressBar() {
+      const percent = ((currentStep - 1) / 5) * 100;
+      document.getElementById("progressBar").style.width = percent + "%";
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      const stepElement = document.getElementById(`step${step}`);
+      if (stepElement) {
+        stepElement.classList.add('active');
+        currentStep = step;
+        updateProgressBar();
+      }
+    }
+
+    function nextStep() {
+      if (currentStep < 5) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    }
+
+    // Drag and drop for Step 1
+    document.addEventListener("dragstart", function(e) {
+      if (e.target.classList.contains("draggable")) {
+        dragged = e.target;
+        setTimeout(() => {
+          if (dragged) dragged.style.display = "none";
+        }, 0);
+      }
+    });
+
+    document.addEventListener("dragend", function(e) {
+      if (dragged) {
+        setTimeout(() => {
+          if (dragged) dragged.style.display = "block";
+          dragged = null;
+        }, 0);
+      }
+    });
+
+    document.querySelectorAll(".drop-slot").forEach(slot => {
+      slot.addEventListener("dragover", (e) => e.preventDefault());
+      slot.addEventListener("drop", (e) => {
+        if (!dragged || slot.innerText.trim() !== "") return;
+        slot.innerText = dragged.innerText;
+        slot.classList.add("filled");
+        dragged.setAttribute("draggable", "false");
+        dragged.style.opacity = 0.5;
+        checkAnswerStep1();
+      });
+    });
+
+    function checkAnswerStep1() {
+      const slots = document.querySelectorAll(".drop-slot");
+      const attempt = Array.from(slots).map(slot => slot.innerText.trim());
+      if (attempt.every(v => v !== "")) {
+        const correct = attempt.every((v, i) => v === correctSequence[i]);
+        if (correct) {
+          document.getElementById("successMsg1").style.display = "block";
+          document.getElementById("nextBtn1").disabled = false;
+        }
+      }
+    }
+
+    // Step 2 validation
+    function validateStep2() {
+      const code = document.getElementById("ksaCode").value;
+      if (code.includes("S[i], S[j] = S[j], S[i]") && code.includes("return S")) {
+        document.getElementById("successMsg2").style.display = "block";
+        document.getElementById("nextBtn2").style.display = "inline-block";
+      } else {
+        alert("❌ Check your blanks again. Ensure the swap and return statements are correct.");
+      }
+    }
+
+    // Step 3 validation
+    function validateStep3() {
+      const code = document.getElementById("prgaCode").value;
+      if (code.includes("S[i], S[j] = S[j], S[i]") && code.includes("keystream.append(S[t])")) {
+        document.getElementById("successMsg3").style.display = "block";
+        document.getElementById("nextBtn3").style.display = "inline-block";
+      } else {
+        alert("❌ Please check the swap and keystream append statements.");
+      }
+    }
+
+    // Step 4 validation
+    function validateStep4() {
+      const code = document.getElementById("encryptionCode").value;
+      if (code.includes("ciphertext.append(p ^ k)")) {
+        document.getElementById("successMsg4").style.display = "block";
+        document.getElementById("nextBtn4").style.display = "inline-block";
+      } else {
+        alert("❌ Make sure the XOR operation uses 'k'.");
+      }
+    }
+
+    // Step 5 validation
+    function validateStep5() {
+      const code = document.getElementById("decryptionCode").value;
+      if (code.includes("plaintext.append(c ^ k)")) {
+        document.getElementById("successMsg5").style.display = "block";
+        document.getElementById("finishBtn").style.display = "inline-block";
+      } else {
+        alert("❌ Make sure the XOR operation uses 'k'.");
+      }
+    }
+
+    // Finish & Download combined code
+    function finishExercise() {
+      const combinedCode = `
+def ksa(key, S):
+    T = key * (len(S) // len(key))
+    j = 0
+    for i in range(len(S)):
+        j = (j + S[i] + T[i]) % len(S)
+        S[i], S[j] = S[j], S[i]
+    return S
+
+def prga(S):
+    i = 0
+    j = 0
+    keystream = []
+    for _ in range(4):  # generate 4 bytes
+        i = (i + 1) % len(S)
+        j = (j + S[i]) % len(S)
+        S[i], S[j] = S[j], S[i]
+        t = (S[i] + S[j]) % len(S)
+        keystream.append(S[t])
+    return keystream
+
+def encrypt(plaintext, keystream):
+    ciphertext = []
+    for p, k in zip(plaintext, keystream):
+        ciphertext.append(p ^ k)
+    return ciphertext
+
+def decrypt(ciphertext, keystream):
+    plaintext = []
+    for c, k in zip(ciphertext, keystream):
+        plaintext.append(c ^ k)
+    return plaintext
+      `.trim();
+
+      // Create a downloadable file
+      const blob = new Blob([combinedCode], {type: "text/plain"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "rc4_complete_code.py";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Initialize progress bar
+    updateProgressBar();
+  </script>
+
+</body>
+</html>
