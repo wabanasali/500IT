@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LightRider Risk Assessment - Complete Integrated</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 960px; margin: 20px auto; background: #f8f9fa; }
+    h1, h2 { color: #2c5aa0; }
+    .treasure-theme {
+      background: linear-gradient(135deg, #d9f7be, #b7eb8f);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      border: 2px solid #a0c562;
+      box-shadow: 0 4px 8px rgba(160,197,98,0.3);
+    }
+    #progress {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+    .progress-step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+      font-size: 0.9rem;
+      color: #999;
+      cursor: default;
+    }
+    .progress-step.active, .progress-step.completed {
+      color: #2c5aa0;
+      font-weight: bold;
+    }
+    .progress-step::before {
+      content: attr(data-step);
+      display: block;
+      margin: 0 auto 6px;
+      width: 28px;
+      height: 28px;
+      line-height: 28px;
+      border: 2px solid #999;
+      border-radius: 50%;
+      background-color: white;
+      color: #999;
+      transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .progress-step.active::before, .progress-step.completed::before {
+      background-color: #2c5aa0;
+      border-color: #2c5aa0;
+      color: white;
+    }
+    .progress-step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      right: -50%;
+      width: 100%;
+      height: 2px;
+      background-color: #999;
+      z-index: -1;
+      transition: background-color 0.3s;
+    }
+    .progress-step.completed:not(:last-child)::after {
+      background-color: #2c5aa0;
+    }
+    .step { display: none; }
+    .step.active { display: block; }
+    button {
+      padding: 12px 24px;
+      margin-top: 10px;
+      cursor: pointer;
+      background-color: #2c5aa0;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: background-color 0.3s;
+    }
+    button:hover { background-color: #1e3f73; }
+    .checkbox-list {
+      max-height: 350px;
+      overflow-y: auto;
+      border: 2px solid #ddd;
+      padding: 15px;
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 6px;
+    }
+    .checkbox-list label {
+      display: block;
+      margin-bottom: 8px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 3px;
+      transition: background-color 0.2s;
+    }
+    .checkbox-list label:hover { background-color: #f0f8ff; }
+    .validation-feedback {
+      background: #e8f4fd;
+      padding: 12px;
+      border: 1px solid #b3d9ff;
+      margin-top: 10px;
+      white-space: pre-wrap;
+      border-radius: 4px;
+    }
+    .icon-list-item {
+      margin-left: 1.2em;
+      text-indent: -1.2em;
+      margin-bottom: 6px;
+      font-size: 1.05em;
+    }
+    .drag-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .assets-container, .vulns-container {
+      flex: 1;
+      background: white;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      max-height: 450px;
+      overflow-y: auto;
+    }
+    .asset-dropzone {
+      border: 2px dashed #2c5aa0;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 15px;
+      min-height: 60px;
+      background: #f9f9f9;
+      transition: background-color 0.3s;
+    }
+    .asset-dropzone.dragover {
+      background-color: #d0e6ff;
+    }
+    .asset-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #2c5aa0;
+    }
+    .vuln-item {
+      background: #f0f8ff;
+      border: 1px solid #a8c4ff;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 8px;
+      cursor: grab;
+      user-select: none;
+    }
+    .vuln-item.dragging {
+      opacity: 0.5;
+    }
+    .assigned-vuln {
+      background: #dbefff;
+      border: 1px solid #7aa8ff;
+      border-radius: 4px;
+      padding: 6px 8px;
+      margin: 4px 0;
+      font-size: 0.9rem;
+      cursor: default;
+      position: relative;
+    }
+    .remove-btn {
+      position: absolute;
+      right: 6px;
+      top: 2px;
+      color: #f44336;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1.2em;
+      line-height: 1;
+    }
+    .remove-btn:hover {
+      color: #b71c1c;
+    }
+    .results-table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .results-table th, .results-table td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+    .results-table th { background-color: #2c5aa0; color: white; font-weight: bold; }
+    .results-table tr:nth-child(even) { background-color: #f8f9fa; }
+    .risk-high { background-color: #ffebee !important; border-left: 4px solid #f44336; }
+    .risk-medium { background-color: #fff3e0 !important; border-left: 4px solid #ff9800; }
+    .risk-low { background-color: #e8f5e8 !important; border-left: 4px solid #4caf50; }
+    .controls-input { width: 100%; margin-top: 4px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- Progress bar -->
+  <div id="progress">
+    <div class="progress-step" data-step="1" id="prog-step1">Assets</div>
+    <div class="progress-step" data-step="2" id="prog-step2">Confirm Assets</div>
+    <div class="progress-step" data-step="3" id="prog-step3">Assign Vulns</div>
+    <div class="progress-step" data-step="4" id="prog-step4">Confirm Vulns</div>
+    <div class="progress-step" data-step="5" id="prog-step5">Risk Assessment</div>
+    <div class="progress-step" data-step="6" id="prog-step6">Risk Treatment</div>
+    <div class="progress-step" data-step="7" id="prog-step7">Results</div>
+  </div>
+
+  <h1>🌟 LightRider Risk Assessment: Solar-Powered Treasure Hunter 🚗</h1>
+
+  <!-- Step 0: Intro -->
+  <div class="step active" id="step0">
+    <h2>🎯 Mission Briefing: Secure the LightRider System</h2>
+    <div class="treasure-theme">
+      <h3>🚗🌟 Welcome to LightRider Adventure!</h3>
+      <p><strong>LightRider</strong> is your autonomous treasure-hunting companion - a Raspberry Pi-powered IoT vehicle designed for outdoor adventure and discovery!</p>
+    </div>
+    <h3>🔧 System Components & Architecture:</h3>
+    <div>
+      <p>🧠 Raspberry Pi 4 (Main Controller) - Brain of the operation</p>
+      <p>☀️ Multiple Light Sensors (Photodiodes) - Navigation and treasure detection</p>
+      <p>🔋 Solar Power System - Eco-friendly power source</p>
+      <p>📡 WiFi/4G Communication Module - Cloud connectivity</p>
+      <p>📱 Mobile Application - Remote control interface</p>
+      <p>☁️ Cloud Server & Database - Real-time data storage</p>
+      <p>🖥️ Web Dashboard - Mission monitoring</p>
+      <p>🎥 Camera Module - Visual treasure confirmation</p>
+      <p>⚙️ Motor Control System - Movement and steering</p>
+      <p>📍 GPS Module - Location tracking</p>
+      <p>🧠 Treasure Detection Algorithm - Finds treasure spots</p>
+    </div>
+    <p><strong>🛡️ Your Mission:</strong> Conduct a comprehensive risk assessment to secure the LightRider system against cyber threats, physical damage, and operational failures!</p>
+    <button id="beginBtn">🚀 Begin Risk Assessment</button>
+  </div>
+
+  <!-- Step 1: Asset Identification -->
+  <div class="step" id="step1">
+    <h2>Step 1: Identify LightRider Assets 🔍</h2>
+    <p>Select which components you consider <strong>critical assets</strong> that need protection in the LightRider system:</p>
+    <div class="checkbox-list" id="component-list"></div>
+    <button onclick="validateAssets()">✅ Validate Asset Selection</button>
+    <div id="assetValidationFeedback" class="validation-feedback" style="display:none;"></div>
+  </div>
+
+  <!-- Step 1 Grading -->
+  <div class="step" id="step1grade">
+    <h2>Step 1: Asset Grading & Expected Answers</h2>
+    <div id="assetGrade"></div>
+    <button onclick="showConfirmedAssets();nextStep('step2')">➡️ Proceed to Vulnerability Assignment</button>
+  </div>
+
+  <!-- Step 2: Confirmed Assets -->
+  <div class="step" id="step2">
+    <h2>Step 2: Confirmed LightRider Assets ✅</h2>
+    <div id="confirmedAssetsList"></div>
+    <button onclick="nextStep('step3')">🔐 Proceed to Assign Vulnerabilities</button>
+  </div>
+
+  <!-- Step 3: Drag & Drop Vulnerabilities -->
+  <div class="step" id="step3">
+    <h2>Step 3: Assign Vulnerabilities by Dragging 🎯</h2>
+    <p>Drag vulnerabilities from the right and drop them onto the correct asset on the left.</p>
+    <div class="drag-container">
+      <div class="assets-container" id="assetsContainer"></div>
+      <div class="vulns-container" id="vulnsContainer"><h3>Available Vulnerabilities</h3></div>
+    </div>
+    <button onclick="validateVulnerabilities()">✅ Submit Vulnerabilities</button>
+    <div id="vulnerabilityValidationFeedback" class="validation-feedback" style="display:none;"></div>
+  </div>
+
+  <!-- Step 3 Grading -->
+  <div class="step" id="step3grade">
+    <h2>Step 3: Vulnerability Grading & Expected Answers</h2>
+    <div id="vulnGrade"></div>
+    <button onclick="showConfirmedVulnerabilities();nextStep('step4')">➡️ Proceed to Confirmed Vulnerabilities</button>
+  </div>
+
+  <!-- Step 4: Confirmed Vulnerabilities -->
+  <div class="step" id="step4">
+    <h2>Step 4: Confirmed Vulnerabilities 📋</h2>
+    <div id="confirmedVulnerabilitiesList"></div>
+    <button onclick="nextStep('step5')">📊 Proceed to Risk Assessment</button>
+  </div>
+
+  <!-- Step 5: Risk Likelihood & Impact -->
+  <div class="step" id="step5">
+    <h2>Step 5: Assess Risk Likelihood & Impact ⚖️</h2>
+    <form id="riskAssessmentForm"></form>
+    <button onclick="validateRiskAssessment()">📈 Calculate Risk Scores</button>
+    <div id="riskAssessmentFeedback" class="validation-feedback" style="display:none;"></div>
+  </div>
+
+  <!-- Step 5 Grading -->
+  <div class="step" id="step5grade">
+    <h2>Step 5: Risk Assessment Grading & Expected Answers</h2>
+    <div id="riskGrade"></div>
+    <button onclick="generateRiskTreatmentInputs();nextStep('step6')">➡️ Proceed to Risk Treatment</button>
+  </div>
+
+  <!-- Step 6: Risk Treatment -->
+  <div class="step" id="step6">
+    <h2>Step 6: Risk Treatment & Security Controls 🛡️</h2>
+    <form id="riskTreatmentForm"></form>
+    <button onclick="gradeRiskTreatment()">📊 Grade & Review Risk Treatment</button>
+  </div>
+
+  <!-- Step 6 Grading -->
+  <div class="step" id="step6grade">
+    <h2>Step 6: Risk Treatment Grading & Expected Answers</h2>
+    <div id="treatGrade"></div>
+    <button onclick="generateFinalRiskRegister();nextStep('stepResults')">📊 View Complete Risk Register</button>
+  </div>
+
+  <!-- Step 7: Final Risk Register -->
+  <div class="step" id="stepResults">
+    <h2>🏆 LightRider Risk Register - Mission Complete!</h2>
+    <div id="riskRegister"></div>
+    <div class="treasure-theme" style="margin-top: 20px;">
+      <h3>🎉 Congratulations, Treasure Hunter!</h3>
+      <p>You've successfully completed the LightRider risk assessment. Your autonomous treasure hunter is now better protected against threats!</p>
+    </div>
+    <button onclick="restart()">🔄 Start New Assessment</button>
+  </div>
+
+<script>
+const lightRiderComponents = [
+  "Raspberry Pi 4 (Main Controller)",
+  "Multiple Light Sensors (Photodiodes)",
+  "Solar Power System",
+  "WiFi/4G Communication Module",
+  "Mobile Application",
+  "Cloud Server & Database",
+  "Web Dashboard",
+  "Camera Module",
+  "Motor Control System",
+  "GPS Module",
+  "Treasure Detection Algorithm"
+];
+
+const expectedLightRiderAssets = new Set(lightRiderComponents);
+
+const sampleVulnerabilities = {
+  "Raspberry Pi 4 (Main Controller)": [
+    "Unencrypted SSH access",
+    "Default credentials",
+    "Outdated operating system",
+    "Physical tampering",
+    "Exposed GPIO/debug interfaces",
+    "Lack of secure boot"
+  ],
+  "Multiple Light Sensors (Photodiodes)": [
+    "Optical injection/spoofing attacks (using artificial light)",
+    "Physical damage from weather or debris",
+    "Calibration drift affecting data reliability",
+    "Unintended photonic reception (eavesdropping via reverse-bias operation)"
+  ],
+  "Solar Power System": [
+    "Power fluctuation or load manipulation attacks",
+    "Physical damage to solar panels or connectors",
+    "Battery degradation affecting availability",
+    "Inverter firmware vulnerabilities (if smart inverters are present)"
+  ],
+  "WiFi/4G Communication Module": [
+    "Man-in-the-middle (MITM) attacks",
+    "Signal jamming (denial of service)",
+    "Unencrypted data transmission",
+    "SIM swapping risks (for cellular modules)",
+    "DNS spoofing or hijacking"
+  ],
+  "Mobile Application": [
+    "Weak or missing authentication",
+    "Insecure API endpoints",
+    "Session hijacking",
+    "Insecure local data storage",
+    "Lack of certificate pinning",
+    "Use of deprecated cryptographic libraries"
+  ],
+  "Cloud Server & Database": [
+    "SQL injection vulnerabilities",
+    "Inadequate access controls",
+    "Risk of data breaches",
+    "Unpatched software vulnerabilities",
+    "Misconfigured storage (e.g., open S3 buckets)",
+    "Lack of monitoring and alerting"
+  ],
+  "Web Dashboard": [
+    "Weak authentication mechanisms",
+    "SQL injection vulnerabilities",
+    "Cross-site scripting (XSS)",
+    "Inadequate access controls",
+    "Unencrypted data transmission",
+    "Predictable session tokens or lack of MFA"
+  ],
+  "Camera Module": [
+    "Default passwords",
+    "Unencrypted video streams",
+    "Firmware vulnerabilities (e.g., buffer overflows)",
+    "Remote code execution (RCE)",
+    "Physical tampering",
+    "Privacy violations through unauthorized visual data exposure"
+  ],
+  "Motor Control System": [
+    "Unauthorized command injection",
+    "Firmware tampering",
+    "Signal interference (e.g., EMI)",
+    "Power supply manipulation",
+    "CAN bus or PLC protocol injection",
+    "Overcurrent or overdrive manipulation"
+  ],
+  "GPS Module": [
+    "GPS signal spoofing",
+    "GPS jamming (denial of service)",
+    "Data tampering (e.g., false coordinates)",
+    "Replay attacks",
+    "Firmware modification or exploitation"
+  ],
+  "Treasure Detection Algorithm": [
+    "Data poisoning attacks",
+    "Model evasion attacks (adversarial inputs)",
+    "Algorithm bias exploitation",
+    "Denial of service (e.g., input overload)",
+    "Default credentials for access",
+    "Model inversion attacks (if trained on sensitive data)",
+    "Lack of input validation"
+  ]
+};
+
+let validatedAssets = [];
+let vulnerabilitiesByAsset = {};
+let riskData = [];
+let scores = { asset: 0, vuln: 0, risk: 0, treat: 0 };
+let currentStep = 0;
+const totalSteps = 7;
+
+function updateProgressBar() {
+  for(let i=1; i<=totalSteps; i++) {
+    const stepElem = document.getElementById(`prog-step${i}`);
+    if(i < currentStep) {
+      stepElem.classList.add('completed');
+      stepElem.classList.remove('active');
+    } else if(i === currentStep) {
+      stepElem.classList.add('active');
+      stepElem.classList.remove('completed');
+    } else {
+      stepElem.classList.remove('active');
+      stepElem.classList.remove('completed');
+    }
+  }
+}
+
+function nextStep(stepId) {
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  const stepElement = document.getElementById(stepId);
+  if(stepElement) {
+    stepElement.classList.add('active');
+    currentStep = parseInt(stepId.replace(/\D/g,''), 10);
+    if(isNaN(currentStep)) currentStep = 0;
+    updateProgressBar();
+    if(stepId === 'step1') populateComponents();
+    if(stepId === 'step2') showConfirmedAssets();
+    if(stepId === 'step3') generateDragDrop();
+    if(stepId === 'step5') generateRiskAssessmentInputs();
+  }
+}
+
+document.getElementById('beginBtn').addEventListener('click', () => {
+  nextStep('step1');
+});
+
+function populateComponents() {
+  const container = document.getElementById('component-list');
+  container.innerHTML = '';
+  lightRiderComponents.forEach((comp, idx) => {
+    const label = document.createElement('label');
+    label.innerHTML = `<input type="checkbox" value="${comp}" id="comp_${idx}"> ${comp}`;
+    container.appendChild(label);
+  });
+}
+
+function validateAssets() {
+  const checkedBoxes = [...document.querySelectorAll('#component-list input[type=checkbox]:checked')];
+  if (checkedBoxes.length === 0) {
+    alert('Please select at least one component as a critical asset.');
+    return;
+  }
+  const selectedAssets = checkedBoxes.map(cb => cb.value);
+  const selectedSet = new Set(selectedAssets);
+  const missed = [...expectedLightRiderAssets].filter(a => !selectedSet.has(a));
+  const unnecessary = selectedAssets.filter(a => !expectedLightRiderAssets.has(a));
+  const correctSelections = selectedAssets.filter(a => expectedLightRiderAssets.has(a)).length;
+  const totalExpected = expectedLightRiderAssets.size;
+  const scorePercentage = Math.max(0, Math.round((correctSelections / totalExpected * 100) - (unnecessary.length / totalExpected * 25)));
+  scores.asset = scorePercentage;
+  let feedback = `📊 Your Score: ${scorePercentage}%\n\n`;
+  if (missed.length === 0 && unnecessary.length === 0) {
+    feedback += "🎉 Excellent! You correctly identified all critical LightRider assets.";
+  } else {
+    feedback += "🔍 Asset Validation Feedback:\n";
+    if (missed.length > 0) feedback += `\n❌ You missed these critical assets:\n- ${missed.join('\n- ')}\n`;
+    if (unnecessary.length > 0) feedback += `\n⚠️ These components are less critical for security:\n- ${unnecessary.join('\n- ')}\n`;
+    feedback += "\n💡 Consider adjusting your selections for optimal security coverage.";
+  }
+  feedback += "\n\n📋 Expected Assets:\n- " + [...expectedLightRiderAssets].join("\n- ");
+
+  validatedAssets = Array.from(new Set(selectedAssets.filter(a => expectedLightRiderAssets.has(a)).concat(missed)));
+
+  document.getElementById('assetGrade').textContent = feedback;
+  nextStep('step1grade');
+}
+
+function showConfirmedAssets() {
+  const container = document.getElementById('confirmedAssetsList');
+  container.innerHTML = '';
+  validatedAssets.forEach(asset => {
+    const p = document.createElement('p');
+    p.className = 'icon-list-item';
+    p.textContent = `🔒 ${asset}`;
+    container.appendChild(p);
+  });
+}
+
+// Drag & Drop Vulnerabilities (Step 3)
+
+function generateDragDrop() {
+  const assetsContainer = document.getElementById('assetsContainer');
+  const vulnsContainer = document.getElementById('vulnsContainer');
+  assetsContainer.innerHTML = '';
+  vulnsContainer.innerHTML = '<h3>Available Vulnerabilities</h3>';
+
+  // Collect unique vulnerabilities from validated assets
+  const vulnSet = new Set();
+  validatedAssets.forEach(asset => {
+    (sampleVulnerabilities[asset] || []).forEach(v => vulnSet.add(v));
+  });
+
+  // Create drop zones for each asset
+  validatedAssets.forEach(asset => {
+    const div = document.createElement('div');
+    div.className = 'asset-dropzone';
+    div.dataset.asset = asset;
+    div.addEventListener('dragover', dragOverHandler);
+    div.addEventListener('drop', dropHandler);
+    div.addEventListener('dragleave', dragLeaveHandler);
+
+    const title = document.createElement('div');
+    title.className = 'asset-title';
+    title.textContent = asset;
+    div.appendChild(title);
+
+    const assignedList = document.createElement('div');
+    assignedList.className = 'assigned-list';
+    div.appendChild(assignedList);
+
+    assetsContainer.appendChild(div);
+  });
+
+  // Create draggable vulnerability items
+  vulnSet.forEach(vuln => {
+    const vulnDiv = document.createElement('div');
+    vulnDiv.className = 'vuln-item';
+    vulnDiv.draggable = true;
+    vulnDiv.textContent = vuln;
+    vulnDiv.addEventListener('dragstart', dragStartHandler);
+    vulnDiv.addEventListener('dragend', dragEndHandler);
+    vulnsContainer.appendChild(vulnDiv);
+  });
+}
+
+let draggedItem = null;
+
+function dragStartHandler(e) {
+  draggedItem = e.target;
+  e.dataTransfer.setData('text/plain', e.target.textContent);
+  setTimeout(() => e.target.classList.add('dragging'), 0);
+}
+
+function dragEndHandler(e) {
+  e.target.classList.remove('dragging');
+  draggedItem = null;
+}
+
+function dragOverHandler(e) {
+  e.preventDefault();
+  e.currentTarget.classList.add('dragover');
+}
+
+function dragLeaveHandler(e) {
+  e.currentTarget.classList.remove('dragover');
+}
+
+function dropHandler(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  if (!draggedItem) return;
+
+  const vulnText = draggedItem.textContent;
+  const assetDiv = e.currentTarget;
+  const assignedList = assetDiv.querySelector('.assigned-list');
+
+  // Prevent duplicates
+  if ([...assignedList.children].some(child => child.firstChild.textContent === vulnText)) return;
+
+  const assignedVuln = document.createElement('div');
+  assignedVuln.className = 'assigned-vuln';
+  assignedVuln.textContent = vulnText;
+
+  const removeBtn = document.createElement('span');
+  removeBtn.className = 'remove-btn';
+  removeBtn.textContent = '×';
+  removeBtn.title = 'Remove vulnerability';
+  removeBtn.onclick = () => assignedVuln.remove();
+
+  assignedVuln.appendChild(removeBtn);
+  assignedList.appendChild(assignedVuln);
+}
+
+// Validate vulnerabilities assignment and grade (Step 3)
+
+function validateVulnerabilities() {
+  const feedbackDiv = document.getElementById('vulnerabilityValidationFeedback');
+  feedbackDiv.style.display = 'none';
+
+  vulnerabilitiesByAsset = {};
+  let allHaveVulns = true;
+
+  const assetDropzones = document.querySelectorAll('.asset-dropzone');
+  assetDropzones.forEach(assetDiv => {
+    const asset = assetDiv.dataset.asset;
+    const assignedList = assetDiv.querySelector('.assigned-list');
+    const vulns = [...assignedList.children].map(div => div.firstChild.textContent.trim());
+    if (vulns.length === 0) allHaveVulns = false;
+    vulnerabilitiesByAsset[asset] = vulns;
+  });
+
+  if (!allHaveVulns) {
+    feedbackDiv.style.display = 'block';
+    feedbackDiv.textContent = '⚠️ Please assign at least one vulnerability to each asset.';
+    return;
+  }
+
+  // Grade vulnerabilities against expected
+  let totalExpected = 0;
+  let matchedCount = 0;
+  let feedback = '';
+
+  for (const asset of validatedAssets) {
+    const studentVulns = (vulnerabilitiesByAsset[asset] || []).map(v => v.toLowerCase());
+    const expectedVulns = (sampleVulnerabilities[asset] || []).map(v => v.toLowerCase());
+    totalExpected += expectedVulns.length;
+
+    expectedVulns.forEach(expectedVuln => {
+      if (studentVulns.some(sv => sv.includes(expectedVuln) || expectedVuln.includes(sv))) {
+        matchedCount++;
+      }
+    });
+
+    const missing = expectedVulns.filter(ev => !studentVulns.some(sv => sv.includes(ev) || ev.includes(sv)));
+    if (missing.length > 0) {
+      feedback += `\n⚠️ For asset "${asset}", you missed these expected vulnerabilities:\n- ${missing.join('\n- ')}\n`;
+    }
+  }
+
+  const score = totalExpected > 0 ? Math.round((matchedCount / totalExpected) * 100) : 100;
+  scores.vuln = score;
+  feedback = `📊 Your Vulnerability Assessment Score: ${score}%\n` + (feedback || "\n✅ Great job! You identified all expected vulnerabilities.");
+
+  // Always show full expected vulnerabilities for learning
+  feedback += "\n\n📋 Expected Vulnerabilities by Asset:\n";
+  for (const asset of validatedAssets) {
+    const expectedList = sampleVulnerabilities[asset] || [];
+    feedback += `\n${asset}:\n- ${expectedList.join('\n- ') || '(No expected vulnerabilities defined)'}`;
+  }
+
+  // Replace vulnerabilitiesByAsset with expected vulnerabilities for next steps
+  const newVulnByAsset = {};
+  validatedAssets.forEach(asset => {
+    const vulns = sampleVulnerabilities[asset] ? [...sampleVulnerabilities[asset]] : [];
+    if (vulns.length > 0) {
+      newVulnByAsset[asset] = vulns;
+    }
+  });
+  vulnerabilitiesByAsset = newVulnByAsset;
+  validatedAssets = Object.keys(vulnerabilitiesByAsset);
+
+  feedbackDiv.style.display = 'block';
+  feedbackDiv.textContent = feedback;
+
+  nextStep('step3grade');
+}
+
+// Show confirmed vulnerabilities (Step 4)
+function showConfirmedVulnerabilities() {
+  const container = document.getElementById('confirmedVulnerabilitiesList');
+  container.innerHTML = '';
+  for (const [asset, vulns] of Object.entries(vulnerabilitiesByAsset)) {
+    const p = document.createElement('p');
+    p.className = 'icon-list-item';
+    p.innerHTML = `🎯 <strong>${asset}</strong>:<br>• ${vulns.join('<br>• ')}`;
+    container.appendChild(p);
+  }
+}
+
+// Risk Assessment inputs and validation (Step 5)
+function generateRiskAssessmentInputs() {
+  const form = document.getElementById('riskAssessmentForm');
+  form.innerHTML = '';
+  for (const [asset, vulns] of Object.entries(vulnerabilitiesByAsset)) {
+    vulns.forEach((vuln, idx) => {
+      const div = document.createElement('div');
+      div.style.border = '2px solid #ddd';
+      div.style.padding = '15px';
+      div.style.marginBottom = '15px';
+      div.style.background = '#f8f9fa';
+      div.style.borderRadius = '6px';
+      const assetLabel = document.createElement('h4');
+      assetLabel.textContent = `🔒 Asset: ${asset}`;
+      assetLabel.style.color = '#2c5aa0';
+      assetLabel.style.marginTop = '0';
+      div.appendChild(assetLabel);
+      const vulnLabel = document.createElement('p');
+      vulnLabel.innerHTML = `<strong>⚠️ Vulnerability:</strong> ${vuln}`;
+      div.appendChild(vulnLabel);
+      const likelihoodContainer = document.createElement('div');
+      likelihoodContainer.style.marginBottom = '10px';
+      const likelihoodLabel = document.createElement('label');
+      likelihoodLabel.textContent = '📊 Likelihood:';
+      likelihoodLabel.style.fontWeight = 'bold';
+      likelihoodContainer.appendChild(likelihoodLabel);
+      const likelihoodSelect = document.createElement('select');
+      likelihoodSelect.name = `likelihood_${asset}_${idx}`;
+      likelihoodSelect.required = true;
+      likelihoodSelect.style.width = '200px';
+      likelihoodSelect.style.marginLeft = '10px';
+      ['-- Select --', 'Low (1)', 'Medium (2)', 'High (3)'].forEach((text, i) => {
+        const option = document.createElement('option');
+        option.value = i === 0 ? '' : i;
+        option.textContent = text;
+        likelihoodSelect.appendChild(option);
+      });
+      likelihoodContainer.appendChild(likelihoodSelect);
+      div.appendChild(likelihoodContainer);
+      const impactContainer = document.createElement('div');
+      const impactLabel = document.createElement('label');
+      impactLabel.textContent = '💥 Impact:';
+      impactLabel.style.fontWeight = 'bold';
+      impactContainer.appendChild(impactLabel);
+      const impactSelect = document.createElement('select');
+      impactSelect.name = `impact_${asset}_${idx}`;
+      impactSelect.required = true;
+      impactSelect.style.width = '200px';
+      impactSelect.style.marginLeft = '10px';
+      ['-- Select --', 'Low (1)', 'Medium (2)', 'High (3)'].forEach((text, i) => {
+        const option = document.createElement('option');
+        option.value = i === 0 ? '' : i;
+        option.textContent = text;
+        impactSelect.appendChild(option);
+      });
+      impactContainer.appendChild(impactSelect);
+      div.appendChild(impactContainer);
+      form.appendChild(div);
+    });
+  }
+}
+
+function validateRiskAssessment() {
+  const form = document.getElementById('riskAssessmentForm');
+  const feedbackDiv = document.getElementById('riskAssessmentFeedback');
+  feedbackDiv.style.display = 'none';
+  const formData = new FormData(form);
+  riskData = [];
+  for (const [asset, vulns] of Object.entries(vulnerabilitiesByAsset)) {
+    vulns.forEach((vuln, idx) => {
+      const likelihood = formData.get(`likelihood_${asset}_${idx}`);
+      const impact = formData.get(`impact_${asset}_${idx}`);
+      if (!likelihood || !impact) {
+        feedbackDiv.style.display = 'block';
+        feedbackDiv.textContent = '⚠️ Please specify likelihood and impact for all vulnerabilities.';
+        return;
+      }
+      riskData.push({
+        asset,
+        vulnerability: vuln,
+        likelihood: Number(likelihood),
+        impact: Number(impact),
+        riskScore: Number(likelihood) * Number(impact),
+        treatment: null,
+        controls: ''
+      });
+    });
+  }
+  // For simplicity, skipping grading here; you can add it as needed
+  nextStep('step5grade');
+}
+
+// Risk Treatment inputs and grading (Step 6)
+function generateRiskTreatmentInputs() {
+  const form = document.getElementById('riskTreatmentForm');
+  form.innerHTML = '';
+  riskData.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.style.border = '2px solid #ddd';
+    div.style.padding = '15px';
+    div.style.marginBottom = '15px';
+    div.style.borderRadius = '6px';
+    if (item.riskScore >= 6) div.className = 'risk-high';
+    else if (item.riskScore >= 3) div.className = 'risk-medium';
+    else div.className = 'risk-low';
+    const title = document.createElement('div');
+    title.innerHTML = `
+      <h4 style="margin-top: 0; color: #2c5aa0;">🎯 Risk Assessment #${idx + 1}</h4>
+      <p><strong>🔒 Asset:</strong> ${item.asset}</p>
+      <p><strong>⚠️ Vulnerability:</strong> ${item.vulnerability}</p>
+      <p><strong>📊 Risk Score:</strong> ${item.riskScore}</p>
+    `;
+    div.appendChild(title);
+    const treatmentContainer = document.createElement('div');
+    treatmentContainer.style.marginBottom = '15px';
+    const treatmentLabel = document.createElement('label');
+    treatmentLabel.innerHTML = '<strong>🛡️ Risk Treatment Strategy:</strong>';
+    treatmentLabel.style.display = 'block';
+    treatmentLabel.style.marginBottom = '8px';
+    treatmentContainer.appendChild(treatmentLabel);
+    ['Mitigate', 'Accept', 'Transfer', 'Avoid'].forEach(treatment => {
+      const label = document.createElement('label');
+      label.style.display = 'inline-block';
+      label.style.marginRight = '15px';
+      label.style.fontWeight = 'normal';
+      label.innerHTML = `<input type="radio" name="treatment_${idx}" value="${treatment}" required style="margin-right: 5px;"> ${treatment}`;
+      treatmentContainer.appendChild(label);
+    });
+    div.appendChild(treatmentContainer);
+    const controlsLabel = document.createElement('label');
+    controlsLabel.innerHTML = '<strong>🔧 Suggested Security Controls:</strong>';
+    controlsLabel.style.display = 'block';
+    controlsLabel.style.marginBottom = '5px';
+    div.appendChild(controlsLabel);
+    const controlsInput = document.createElement('textarea');
+    controlsInput.name = `controls_${idx}`;
+    controlsInput.rows = 4;
+    controlsInput.className = 'controls-input';
+    controlsInput.placeholder = 'Describe specific security controls, countermeasures, or mitigation strategies...';
+    div.appendChild(controlsInput);
+    form.appendChild(div);
+  });
+}
+
+function gradeRiskTreatment() {
+  // Implement grading logic as needed
+  nextStep('step6grade');
+}
+
+function generateFinalRiskRegister() {
+  // Implement final report generation as needed
+  nextStep('stepResults');
+}
+
+function restart() {
+  validatedAssets = [];
+  vulnerabilitiesByAsset = {};
+  riskData = [];
+  scores = { asset: 0, vuln: 0, risk: 0, treat: 0 };
+  document.querySelectorAll('textarea, input[type=text]').forEach(el => el.value = '');
+  document.querySelectorAll('input[type=checkbox], input[type=radio]').forEach(el => el.checked = false);
+  document.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  nextStep('step0');
+}
+
+// Initialize progress bar on load
+updateProgressBar();
+
+</script>
+</body>
+</html>
